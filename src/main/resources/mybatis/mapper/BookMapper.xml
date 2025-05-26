@@ -11,17 +11,118 @@
         <result column="STATUS" property="status"/>
         <result column="AGE_CATEGORY" property="ageCategory"/>
         <result column="BOOK_COUNT" property="bookCount"/>
+        <result column="BOOK_LANGUAGE" property="language"/>
         <result column="CREATE_TIME" property="createTime"/>
         <result column="UPDATE_TIME" property="updateTime"/>
         <result column="ACTIVE" property="active"/>
     </resultMap>
 
     <select id="findAllBook" resultMap="bookEntity">
-        select * from book
+        select
+            ID,
+            TITLE,
+            AUTHOR,
+            CATEGORY,
+            PRICE,
+            PUBLISH_DATE,
+            STATUS,
+            CREATE_TIME,
+            BOOK_COUNT,
+            AGE_CATEGORY,
+            BOOK_LANGUAGE,
+            ACTIVE
+        from book
+        where ACTIVE = 1
+    </select>
+
+    <!-- 统计总记录数 -->
+    <select id="countByCondition" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM book
+        <where>
+            ACTIVE = 1
+            <if test="filterVoList != null and filterVoList.size() > 0">
+                <foreach collection="filterVoList" item="filterVo">
+                    AND ${filterVo.column} in
+                    <foreach item="value" collection="filterVo.values" separator="," open="(" close=")">
+                        #{value}
+                    </foreach>
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="selectByCondition" resultMap="bookEntity">
+        SELECT
+            ID,
+            TITLE,
+            AUTHOR,
+            CATEGORY,
+            PRICE,
+            PUBLISH_DATE,
+            STATUS,
+            CREATE_TIME,
+            BOOK_COUNT,
+            BOOK_LANGUAGE,
+            AGE_CATEGORY,
+            ACTIVE
+        FROM book
+        <where>
+            ACTIVE = 1
+            <if test="filterVoList != null and filterVoList.size() > 0">
+                <foreach collection="filterVoList" item="filterVo">
+                    AND ${filterVo.column} in
+                    <foreach item="value" collection="filterVo.values" separator="," open="(" close=")">
+                        #{value}
+                    </foreach>
+                </foreach>
+            </if>
+        </where>
+        ORDER BY
+        <choose>
+            <when test="sortField == 'title'">TITLE</when>
+            <when test="sortField == 'price'">PRICE</when>
+            <otherwise>ID</otherwise>
+        </choose>
+        <if test="sortOrder != null and sortOrder == 'ASC'">ASC</if>
+        <if test="sortOrder != null and sortOrder == 'DESC'">DESC</if>
+        <if test="sortOrder == null">DESC</if>
+        LIMIT #{offset}, #{pageSize}
     </select>
 
     <select id="findBookById" resultMap="bookEntity">
-        select * from book where ID = #{id}
+        select
+            ID,
+            TITLE,
+            AUTHOR,
+            CATEGORY,
+            PRICE,
+            PUBLISH_DATE,
+            STATUS,
+            CREATE_TIME,
+            BOOK_COUNT,
+            BOOK_LANGUAGE,
+            AGE_CATEGORY,
+            ACTIVE
+        from book
+        where ID = #{id}
+    </select>
+
+    <select id="findBookByLanguage" resultMap="bookEntity">
+        select
+            ID,
+            TITLE,
+            AUTHOR,
+            CATEGORY,
+            PRICE,
+            PUBLISH_DATE,
+            STATUS,
+            CREATE_TIME,
+            BOOK_COUNT,
+            BOOK_LANGUAGE,
+            AGE_CATEGORY,
+            ACTIVE
+        from book
+        where BOOK_LANGUAGE = #{language} and ACTIVE = 1
     </select>
 
     <insert id="addBook" parameterType="com.book.entity.BookEntity">
@@ -36,25 +137,37 @@
             CREATE_TIME,
             BOOK_COUNT,
             AGE_CATEGORY,
-            ACTIVE)
+            BOOK_LANGUAGE,
+            ACTIVE
+            )
         values (
                    #{title},
                    #{author},
-                   #{categirt},
+                   #{category},
                    #{price},
                    #{publishDate},
                    #{status},
                    #{createTime},
                    #{bookCount},
                    #{ageCategory},
+                   #{language},
                    #{active}
                );
     </insert>
 
     <update id="updateBook" parameterType="com.book.entity.BookEntity">
         update book
-        set  UPDATE_TIME= #{updateTime}
-            BOOK_COUNT=#{bookCount}
+        set  UPDATE_TIME= #{updateTime},
+             TITLE= #{title},
+             AUTHOR= #{author},
+             CATEGORY= #{category},
+             PRICE= #{price},
+             PUBLISH_DATE=#{publishDate},
+             STATUS=#{status},
+             BOOK_COUNT=#{bookCount},
+             BOOK_LANGUAGE = #{language},
+             AGE_CATEGORY=#{ageCategory},
+             ACTIVE=#{active}
         where
             ID = #{id}
         ;
