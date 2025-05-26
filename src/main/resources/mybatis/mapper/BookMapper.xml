@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.book.mapper.BookMapper">
+    <resultMap type="com.book.entity.BookEntity" id="bookEntity">
+        <result column="ID" property="id"/>
+        <result column="TITLE" property="title"/>
+        <result column="AUTHOR" property="author"/>
+        <result column="CATEGORY" property="category"/>
+        <result column="PRICE" property="price"/>
+        <result column="PUBLISH_DATE" property="publishDate"/>
+        <result column="STATUS" property="status"/>
+        <result column="AGE_CATEGORY" property="ageCategory"/>
+        <result column="BOOK_COUNT" property="bookCount"/>
+        <result column="CREATE_TIME" property="createTime"/>
+        <result column="UPDATE_TIME" property="updateTime"/>
+        <result column="ACTIVE" property="active"/>
+    </resultMap>
+
+    <select id="findAllBook" resultMap="bookEntity">
+        select * from book
+    </select>
+
+    <select id="findBookById" resultMap="bookEntity">
+        select * from book where ID = #{id}
+    </select>
+
+    <insert id="addBook" parameterType="com.book.entity.BookEntity">
+        insert into
+            book (
+            TITLE,
+            AUTHOR,
+            CATEGORY,
+            PRICE,
+            PUBLISH_DATE,
+            STATUS,
+            CREATE_TIME,
+            BOOK_COUNT,
+            AGE_CATEGORY,
+            ACTIVE)
+        values (
+                   #{title},
+                   #{author},
+                   #{categirt},
+                   #{price},
+                   #{publishDate},
+                   #{status},
+                   #{createTime},
+                   #{bookCount},
+                   #{ageCategory},
+                   #{active}
+               );
+    </insert>
+
+    <update id="updateBook" parameterType="com.book.entity.BookEntity">
+        update book
+        set  UPDATE_TIME= #{updateTime}
+            BOOK_COUNT=#{bookCount}
+        where
+            ID = #{id}
+        ;
+    </update>
+
+    <delete id="deleteBook">
+        delete from book where id=#{id}
+    </delete>
+
+</mapper>
