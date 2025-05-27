@@ -47,18 +47,11 @@ public class BookControllerIntegrationTest {
     }
 
     @Test
-    public void loginTest() throws Exception {
-        mockMvc.perform(get("/login"))
-                .andExpect(status().is(Integer.parseInt(BookController.SUCCESS_CODE)))
-                .andExpect(jsonPath("$.data").value("aaa"));
-    }
-
-    @Test
     public void findAllBookTest() throws Exception {
         List<BookEntity> bookList = initBookList();
         when(bookFacade.findAllBook()).thenReturn(bookList);
         // 测试 HTTP 请求
-        mockMvc.perform(get("/findAllBook").header("token", "aaa"))
+        mockMvc.perform(get("/v1/books").header("token", "aaa"))
                 .andExpect(status().is(Integer.parseInt(BookController.SUCCESS_CODE)))
                 .andExpect(jsonPath("$.data.size()").value(1));
     }
@@ -69,7 +62,7 @@ public class BookControllerIntegrationTest {
         BookEntity bookEntity = bookList.get(0);
         Integer id = bookEntity.getId();
         when(bookFacade.findBookById(id)).thenReturn(bookEntity);
-        mockMvc.perform(get("/findBookById/"+id).header("token", "aaa"))
+        mockMvc.perform(get("/v1/books/"+id).header("token", "aaa"))
                 .andExpect(status().is(Integer.parseInt(BookController.SUCCESS_CODE)))
                 .andExpect(jsonPath("$.data.id").value(id));
     }
@@ -81,7 +74,7 @@ public class BookControllerIntegrationTest {
         Integer id = bookEntity.getId();
         String ERROR = "Server Error";
         when(bookFacade.findBookById(id)).thenThrow(new RuntimeException(ERROR));
-        mockMvc.perform(get("/findBookById/"+id).header("token", "aaa"))
+        mockMvc.perform(get("/v1/books/"+id).header("token", "aaa"))
                 .andExpect(status().is(400));
     }
 
@@ -89,7 +82,7 @@ public class BookControllerIntegrationTest {
     public void addBookTest() throws Exception {
         List<BookEntity> bookList = initBookList();
         BookEntity bookEntity = bookList.get(0);
-        mockMvc.perform(post("/addBook").header("token", "aaa")
+        mockMvc.perform(post("/v1/books").header("token", "aaa")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(JSON.toJSONString(bookEntity)))
                 .andExpect(status().is(Integer.parseInt(BookController.SUCCESS_CODE)));
@@ -100,7 +93,7 @@ public class BookControllerIntegrationTest {
     public void updateBookTest_NoException() throws Exception {
         List<BookEntity> bookList = initBookList();
         BookEntity bookEntity = bookList.get(0);
-        mockMvc.perform(put("/updateBook").header("token", "aaa")
+        mockMvc.perform(put("/v1/books").header("token", "aaa")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JSON.toJSONString(bookEntity)))
                 .andExpect(status().is(Integer.parseInt(BookController.SUCCESS_CODE)));
@@ -112,7 +105,7 @@ public class BookControllerIntegrationTest {
         List<BookEntity> bookList = initBookList();
         BookEntity bookEntity = bookList.get(0);
         bookEntity.setId(null);
-        mockMvc.perform(put("/updateBook").header("token", "aaa")
+        mockMvc.perform(put("/v1/books").header("token", "aaa")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JSON.toJSONString(bookEntity)))
                 .andExpect(status().is(500));
@@ -124,7 +117,7 @@ public class BookControllerIntegrationTest {
         List<BookEntity> bookList = initBookList();
         BookEntity bookEntity = bookList.get(0);
         Integer id = bookEntity.getId();
-        mockMvc.perform(delete("/deleteBook/"+id).header("token", "aaa"))
+        mockMvc.perform(delete("/v1/books/"+id).header("token", "aaa"))
                 .andExpect(status().is(Integer.parseInt(BookController.SUCCESS_CODE)));
     }
 
@@ -138,7 +131,7 @@ public class BookControllerIntegrationTest {
         queryVo.setPageNum(1);
         PageResult<BookEntity> bookEntityPageResult = new PageResult<>(1, queryVo.getPageNum(), queryVo.getPageSize(), bookList);
         when(bookFacade.getBooksByPage(queryVo)).thenReturn(bookEntityPageResult);
-        mockMvc.perform(post("/pageSearchBook").header("token", "aaa")
+        mockMvc.perform(post("/v1/books/page-search").header("token", "aaa")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JSON.toJSONString(queryVo)))
                 .andExpect(status().is(Integer.parseInt(BookController.SUCCESS_CODE)))
@@ -153,7 +146,7 @@ public class BookControllerIntegrationTest {
         Integer age = 5;
         String language= LanguageEnum.CHINESE.getCode();
         when(bookFacade.recommendBook(age,language)).thenReturn(bookList);
-        mockMvc.perform(get("/recommendBookByAge/"+age).header("token", "aaa"))
+        mockMvc.perform(get("/v1/books/recommend/"+age).header("token", "aaa"))
                 .andExpect(status().is(Integer.parseInt(BookController.SUCCESS_CODE)))
                 .andExpect(jsonPath("$.data[0].id").value(id));
     }
@@ -167,7 +160,7 @@ public class BookControllerIntegrationTest {
         order.setBookId(id);
         order.setOrderCount(1);
         order.setUserBalance(100d);
-        mockMvc.perform(post("/orderBook").header("token", "aaa")
+        mockMvc.perform(post("/v1/books/orders").header("token", "aaa")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JSON.toJSONString(order)))
                 .andExpect(status().is(Integer.parseInt(BookController.SUCCESS_CODE)));

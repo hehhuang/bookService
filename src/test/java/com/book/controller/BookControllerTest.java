@@ -1,7 +1,6 @@
 package com.book.controller;
 
 
-import com.book.config.TokenInterceptor;
 import com.book.entity.BookEntity;
 import com.book.entity.BookQueryVo;
 import com.book.entity.PageResult;
@@ -70,13 +69,6 @@ public class BookControllerTest {
         bookEntityList.add(adultBook);
 
         return bookEntityList;
-    }
-
-    @Test
-    public void loginTest() throws Exception {
-        ResultModel resultModel = bookController.login();
-        Assertions.assertEquals(SUCCESS_CODE, resultModel.getResultCode());
-        Assertions.assertEquals(TokenInterceptor.VALID_TOKEN, resultModel.getData());
     }
 
     @Test
@@ -176,7 +168,7 @@ public class BookControllerTest {
         Integer age = 5;
         String language= LanguageEnum.CHINESE.getCode();
         when(bookFacade.recommendBook(age,language)).thenReturn(bookList);
-        ResultModel resultModel = bookController.recommendBookByAge(age, language);
+        ResultModel resultModel = bookController.recommendBook(age, language);
         Assertions.assertEquals(SUCCESS_CODE, resultModel.getResultCode());
         Assertions.assertEquals(bookList, resultModel.getData());
     }

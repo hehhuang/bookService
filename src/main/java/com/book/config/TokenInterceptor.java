@@ -1,5 +1,7 @@
 package com.book.config;
 
+import com.alibaba.fastjson.JSON;
+import com.book.entity.ResultModel;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -23,7 +25,8 @@ public class TokenInterceptor implements HandlerInterceptor {
             return true;  // 验证通过，继续执行请求
         } else {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);  // 401 未授权
-            response.getWriter().write("Invalid Token");
+            ResultModel resultModel = new ResultModel("401", "Invalid Token", null);
+            response.getWriter().write(JSON.toJSONString(resultModel));
             return false;  // 验证失败，终止请求
         }
     }
