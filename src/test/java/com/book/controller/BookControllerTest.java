@@ -3,9 +3,12 @@ package com.book.controller;
 
 import com.book.config.TokenInterceptor;
 import com.book.entity.BookEntity;
+import com.book.entity.BookQueryVo;
+import com.book.entity.PageResult;
 import com.book.entity.ResultModel;
+import com.book.enums.LanguageEnum;
 import com.book.facade.BookFacade;
-
+import com.book.service.chain.Order;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,15 +33,42 @@ public class BookControllerTest {
 
     private List<BookEntity> initBookList() {
         List<BookEntity> bookEntityList = new ArrayList<>();
-        BookEntity bookEntity = new BookEntity();
-        bookEntity.setId(1);
-        bookEntity.setTitle("JAVA入门");
-        bookEntity.setAuthor("author1");
-        bookEntity.setCategory("计算机");
-        bookEntity.setAgeCategory("TEENAGER");
-        bookEntity.setPrice(100d);
-        bookEntity.setBookCount(10L);
-        bookEntityList.add(bookEntity);
+        BookEntity teenagerBook = new BookEntity();
+        teenagerBook.setId(1);
+        teenagerBook.setTitle("JAVA入门");
+        teenagerBook.setAuthor("author1");
+        teenagerBook.setCategory("计算机");
+        teenagerBook.setAgeCategory("TEENAGER");
+        teenagerBook.setLanguage("CHINESE");
+        teenagerBook.setStatus(1);
+        teenagerBook.setPrice(100d);
+        teenagerBook.setBookCount(10L);
+        bookEntityList.add(teenagerBook);
+
+        BookEntity childrenBook = new BookEntity();
+        childrenBook.setId(2);
+        childrenBook.setTitle("childrenBook");
+        childrenBook.setAuthor("author2");
+        childrenBook.setCategory("计算机");
+        childrenBook.setAgeCategory("TEENAGER");
+        childrenBook.setLanguage("ENGLISH");
+        childrenBook.setStatus(1);
+        childrenBook.setPrice(100d);
+        childrenBook.setBookCount(10L);
+        bookEntityList.add(childrenBook);
+
+        BookEntity adultBook = new BookEntity();
+        adultBook.setId(2);
+        adultBook.setTitle("adultBook");
+        adultBook.setAuthor("author2");
+        adultBook.setCategory("计算机");
+        adultBook.setAgeCategory("TEENAGER");
+        adultBook.setLanguage("ENGLISH");
+        adultBook.setStatus(1);
+        adultBook.setPrice(100d);
+        adultBook.setBookCount(10L);
+        bookEntityList.add(adultBook);
+
         return bookEntityList;
     }
 
@@ -67,6 +97,21 @@ public class BookControllerTest {
         ResultModel resultModel = bookController.findBookById(id);
         Assertions.assertEquals(SUCCESS_CODE, resultModel.getResultCode());
         Assertions.assertEquals(bookEntity, resultModel.getData());
+    }
+
+    @Test
+    public void updateBookTest_WithRuntimeException() throws Exception {
+        List<BookEntity> bookList = initBookList();
+        BookEntity bookEntity = bookList.get(0);
+        Integer id = bookEntity.getId();
+        String ERROR = "Server Error";
+        when(bookFacade.findBookById(id)).thenThrow(new RuntimeException(ERROR));
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            ResultModel resultModel = bookController.findBookById(id);
+        });
+        Assertions.assertEquals(exception.getMessage(), ERROR);
+
     }
 
     @Test
@@ -106,5 +151,47 @@ public class BookControllerTest {
         Integer id = bookEntity.getId();
         ResultModel resultModel = bookController.deleteBook(id);
         Assertions.assertEquals(SUCCESS_CODE, resultModel.getResultCode());
+    }
+
+    @Test
+    public void pageSearchTest() throws Exception {
+        List<BookEntity> bookList = initBookList();
+        BookEntity bookEntity = bookList.get(0);
+        Integer id = bookEntity.getId();
+        BookQueryVo queryVo = new BookQueryVo();
+        queryVo.setPageSize(1);
+        queryVo.setPageNum(1);
+        PageResult<BookEntity> bookEntityPageResult = new PageResult<>(1, queryVo.getPageNum(), queryVo.getPageSize(), bookList);
+        when(bookFacade.getBooksByPage(queryVo)).thenReturn(bookEntityPageResult);
+        ResultModel resultModel = bookController.pageSearchBook(queryVo);
+        Assertions.assertEquals(SUCCESS_CODE, resultModel.getResultCode());
+        Assertions.assertEquals(bookEntityPageResult, resultModel.getData());
+    }
+
+    @Test
+    public void recommendBookByAgeTest() throws Exception {
+        List<BookEntity> bookList = initBookList();
+        BookEntity bookEntity = bookList.get(0);
+        Integer id = bookEntity.getId();
+        Integer age = 5;
+        String language= LanguageEnum.CHINESE.getCode();
+        when(bookFacade.recommendBook(age,language)).thenReturn(bookList);
+        ResultModel resultModel = bookController.recommendBookByAge(age, language);
+        Assertions.assertEquals(SUCCESS_CODE, resultModel.getResultCode());
+        Assertions.assertEquals(bookList, resultModel.getData());
+    }
+
+    @Test
+    public void orderBookTest() throws Exception {
+        List<BookEntity> bookList = initBookList();
+        BookEntity bookEntity = bookList.get(0);
+        Integer id = bookEntity.getId();
+        Order order = new Order();
+        order.setBookId(id);
+        order.setOrderCount(1);
+        order.setUserBalance(100d);
+        ResultModel resultModel = bookController.orderBook(order);
+        Assertions.assertEquals(SUCCESS_CODE, resultModel.getResultCode());
+
     }
 }

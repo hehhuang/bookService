@@ -5,9 +5,11 @@ import com.book.entity.BookQueryVo;
 import com.book.entity.PageResult;
 import com.book.facade.BookFacade;
 import com.book.mapper.BookMapper;
+import com.book.service.chain.*;
 import com.book.service.template.RecommendBookFactory;
 import com.book.service.template.RecommendBookTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -61,24 +63,25 @@ public class BookService implements BookFacade {
 
     @Override
     public int updateBook(BookEntity bookEntity) throws Exception {
-        BookEntity bookInDb = bookMapper.findBookById(bookEntity.getId());
-        if (bookInDb == null) {
-            throw new Exception(NO_RELATED_BOOK);
-        }
+        checkBookInDb(bookEntity.getId());
         bookEntity.setUpdateTime(getCurrentTime());
         return bookMapper.updateBook(bookEntity);
     }
 
     @Override
     public int deleteBook(Integer id) throws Exception {
+        checkBookInDb(id);
+        return bookMapper.deleteBook(id);
+    }
+
+    private void checkBookInDb(Integer id) throws Exception {
         BookEntity bookInDb = bookMapper.findBookById(id);
         if (bookInDb == null) {
             throw new Exception(NO_RELATED_BOOK);
         }
-        return bookMapper.deleteBook(id);
     }
 
-    private String getCurrentTime() {
+    public static String getCurrentTime() {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String createTime = now.format(formatter);
@@ -91,5 +94,18 @@ public class BookService implements BookFacade {
         return recommendBookService.recommendBooks(age);
     }
 
+    @Transactional
+    @Override
+    public Double orderBook(Order order) {
+        BookEntity bookEntity = findBookById(order.getBookId());
+        UpdateBookCountOrderHandler updateBookCountOrderHandler = new UpdateBookCountOrderHandler(bookMapper, bookEntity);
+        // we can add user table here
+        UserBalanceOrderHandler userBalanceOrderHandler = new UserBalanceOrderHandler(updateBookCountOrderHandler);
 
+        BookStockOrderHandler bookStockOrderHandler = new BookStockOrderHandler(userBalanceOrderHandler);
+        BookStatusOrderHandler bookStatusOrderHandler = new BookStatusOrderHandler(bookStockOrderHandler);
+        AddBookInfoOrderHandler addBookInfoOrderHandler = new AddBookInfoOrderHandler(bookStatusOrderHandler, bookEntity);
+        addBookInfoOrderHandler.handle(order);
+        return order.getFinalUserBalance();
+    }
 }
